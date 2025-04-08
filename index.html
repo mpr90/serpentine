@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Serpentine - Classic Maze Game</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+            background-color: #000000;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .game-container {
+            margin-bottom: 30px;
+        }
+        canvas {
+            border: 2px solid #333;
+            margin: 0 auto;
+            display: block;
+        }
+        .game-description {
+            max-width: 800px;
+            color: #fff;
+            background-color: rgba(255, 255, 255, 0.1);
+            padding: 20px;
+            border-radius: 5px;
+            margin: 20px auto;
+        }
+        h1, h2 {
+            color: #4488FF;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <h1>Serpentine</h1>
+    <div class="game-container">
+        <canvas id="gameCanvas"></canvas>
+    </div>
+    <div class="game-description">
+        <h2>How to Play</h2>
+        <p>Navigate your blue serpent through the maze and eliminate enemy serpents:</p>
+        <ul>
+            <li>Eat tail segments of enemy serpents to make them shorter</li>
+            <li>Red/orange serpents turn green when shorter than you</li>
+            <li>Eliminate green serpents by hitting them head-on</li>
+            <li>Avoid head-on collisions with red/orange serpents</li>
+            <li>Catch frogs to grow longer</li>
+            <li>Clear the level by eliminating all enemy serpents</li>
+        </ul>
+    </div>
+    <script src="serpent.js"></script>
+    <script src="maze.js"></script>
+    <script src="game.js"></script>
+</body>
+</html> 

@@ -1,0 +1,23 @@
+https://en.wikipedia.org/wiki/Serpentine_(video_game)
+
+I want to make a web-based maze game called serpentine. It is a recreation of an 8-bit video game from the 1980s and I will start by adding an image showing the maze layout followed by a description of the game play.
+
+Here is an example screenshot from the game. Can you generate a maze layout from this that looks similar, but don't do it until I tell you about the game play so you better understand the elements in the image.
+
+The player controls a multi-segmented blue 'good' serpent in a maze with the objective of eating all computer-controlled 'evil' (red or orange or green) serpents. Eating the tail segments of serpents makes them shorter, and a red or orange serpent turns green when shorter than the player. Hitting a green serpent headfirst eliminates it, and causes the player's serpent to grow an additional segment. Hitting a red or orange serpent headfirst causes the player's serpent to die. A frog appears at random intervals and gives any serpent eating it an additional segment. 
+
+At the beginning of each level, the player's serpent with only two segments emerges from a protected area in the bottom right of the maze and the opponents emerge from their den at the bottom left of the maze. Once all opponents have been eliminated, the player's serpent automatically returns to a protected area in the bottom right of the maze in preparation for the next level. If the player's serpent dies, one life is lost, and if the player has remaining lives, another player's serpent emerges from the protected area. At the beginning of the game, players start with three lives which are indicated by three two-segment serpents in the protected area.
+
+As the game progresses, opposing serpents are faster and longer, increasing the difficulty, and each advancing level the existing players serpent gets slower. If the player's serpent dies, the replacement regains its original speed, but loses any additional segments gained by the previous incarnation.
+
+Yes, let's proceed to design the maze and review before we write any gameplay code.
+
+Unfortunately, it doesn't look like a maze, since there are multiple closed off areas that would not be accessible. Let's try please copying the exact layout of the walls and passageways in the example screenshot that I gave you.
+
+Next, I would like to work on a system for designing and rendering different mazes for each level of the game. Let's treat the game play area as a grid where each grid sqaure is sized X by Y pixels. Each grid sqaure can then be empty (to represent a passageway) or can hold one of several wall types, e.g. horizontal, vertical, corner (4 orientations), and tee (where a horizontal joins a vertical, again 4 orientations).
+
+Level design then consists of filling in the grid squares with the appropriate wall type (or empty) and a maze renderer will take this information to draw the walls.
+
+Let's start with this and get it to look right before we work on managing collisiions between the serpents and walls.
+
+One unique aspect of the game is how extra lives are gained. The playing serpent will lay an egg (losing a segment in the process) and, if the egg is still on screen when the player re-enters the protected area at the end of a level, the egg hatches into another serpent, which hurries to the protected area. Enemy serpents will also lay eggs; if one hatches, a new two-segment opponent appears. It is possible to lose the last segment to an egg, resulting in the death of that serpent, but this can only happen to the player's serpent. If a frog happens to appear while an egg is on the map, it will head towards the egg and eat it as well. This will occur even at the end of a level when the player's serpent is operating on autopilot, making the choice of position where the last enemy serpent is killed tactically important.

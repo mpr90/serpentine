@@ -7,6 +7,7 @@ class Game {
         RELEASING: 'releasing',
         DOORS_CLOSING: 'doorsClosing',
         PLAYING: 'playing',
+        PLAYER_DEATH_WAIT: 'playerDeathWait',
         PLAYER_RESPAWN_WAIT: 'playerRespawnWait',
         PLAYER_RESPAWN: 'playerRespawn',
         GAME_OVER: 'gameOver'
@@ -45,28 +46,12 @@ class Game {
         this.enemyLength = 5;
 
         // Initialize serpents
-        this.playerSerpent = new Serpent(
-            LEVEL_PLAYER_START[this.level].x,
-            LEVEL_PLAYER_START[this.level].y,
-            this.playerLength,
-            COLORS.PLAYER,
-            this.playerSpeed,
-            MAZE_CONFIG.segmentSize,
-            this.maze
-        );
+        this.createNewPlayerSerpent();
         
         // Initialize enemy serpents
         this.enemySerpents = [
             new Serpent(
-                LEVEL_ENEMY_START[this.level].x,
-                LEVEL_ENEMY_START[this.level].y,
-                this.enemyLength,
-                (this.enemyLength < this.playerLength) ? COLORS.ENEMY_VULNERABLE : COLORS.ENEMY,
-                this.enemySpeed,
-                MAZE_CONFIG.segmentSize,
-                this.maze
-            ),
-            new Serpent(
+                'Enemy 1',
                 LEVEL_ENEMY_START[this.level].x,
                 LEVEL_ENEMY_START[this.level].y,
                 this.enemyLength,
@@ -75,6 +60,16 @@ class Game {
                 MAZE_CONFIG.segmentSize,
                 this.maze
             )
+            // new Serpent(
+            //     'Enemy 2',
+            //     LEVEL_ENEMY_START[this.level].x,
+            //     LEVEL_ENEMY_START[this.level].y,
+            //     this.enemyLength,
+            //     (this.enemyLength < this.playerLength) ? COLORS.ENEMY_VULNERABLE : COLORS.ENEMY,
+            //     this.enemySpeed,
+            //     MAZE_CONFIG.segmentSize,
+            //     this.maze
+            // )
         ];
         
         this.setupControls();
@@ -171,8 +166,25 @@ class Game {
                 }
                 break;
                 
+            case Game.STATES.PLAYER_DEATH_WAIT:
+                if (this.playerSerpent.isDeathAnimationComplete()) {
+                    this.createNewPlayerSerpent();
+                    
+                    // Check for game over
+                    if (this.lives <= 0) {
+                        this.gameState = Game.STATES.GAME_OVER;
+                        this.stateStartTime = timestamp;
+                        if (MAZE_CONFIG.debugLogging) console.log(`Game state transition to GAME_OVER`);
+                    } else {
+                        this.gameState = Game.STATES.PLAYER_RESPAWN_WAIT;
+                        this.stateStartTime = timestamp;
+                        if (MAZE_CONFIG.debugLogging) console.log(`Game state transition to PLAYER_RESPAWN_WAIT`);
+                    }
+                }
+                break;
+                
             case Game.STATES.PLAYER_RESPAWN_WAIT:
-                // Wait for 0.75 seconds before starting the respawn sequence
+                // Wait for 1 second before letting the respawned player move
                 if (stateElapsed > 1000) {
                     // Start player door animation for respawn
                     this.maze.startPlayerDoorAnimation(1); // Start opening the player door
@@ -212,6 +224,19 @@ class Game {
             case Game.STATES.GAME_OVER:
                 break;
         }
+    }
+
+    createNewPlayerSerpent() {
+        this.playerSerpent = new Serpent(
+            'Player',
+            LEVEL_PLAYER_START[this.level].x,
+            LEVEL_PLAYER_START[this.level].y,
+            this.playerLength,
+            COLORS.PLAYER,
+            this.playerSpeed,
+            MAZE_CONFIG.segmentSize,
+            this.maze
+        );
     }
 
     setupControls() {
@@ -323,34 +348,15 @@ class Game {
     handlePlayerDeath() {
         // Decrement lives
         this.lives--;
-        
-        // Check for game over
-        if (this.lives <= 0) {
-            this.gameState = Game.STATES.GAME_OVER;
-            if (MAZE_CONFIG.debugLogging) console.log(`Game state transition to GAME_OVER`);
-            return;
-        }
-        
+                
         // Start death animation for player serpent
         this.playerSerpent.startDeathAnimation();
         
-        // Reset player serpent position
-        this.playerSerpent = new Serpent(
-            MAZE_CONFIG.playerStartX,
-            MAZE_CONFIG.playerStartY,
-            MAZE_CONFIG.initialPlayerLength,
-            COLORS.PLAYER,
-            MAZE_CONFIG.playerSpeed
-        );
-        
-        // Start player door animation for respawn
-        this.maze.startPlayerDoorAnimation(1);
-        
         // Transition to player respawn state
         // First transition to a wait state to give player time to orient
-        this.gameState = Game.STATES.PLAYER_RESPAWN_WAIT;
+        this.gameState = Game.STATES.PLAYER_DEATH_WAIT;
         this.stateStartTime = performance.now();
-        if (MAZE_CONFIG.debugLogging) console.log(`Game state transition to PLAYER_RESPAWN_WAIT`);
+        if (MAZE_CONFIG.debugLogging) console.log(`Game state transition to PLAYER_DEATH_WAIT`);
     }
 
     enemySerpentAI(serpent) {
@@ -511,6 +517,7 @@ class Game {
             case Game.STATES.DOORS_CLOSING:
             case Game.STATES.RELEASING:
             case Game.STATES.PLAYING:
+            case Game.STATES.PLAYER_DEATH_WAIT:
             case Game.STATES.PLAYER_RESPAWN_WAIT:
             case Game.STATES.PLAYER_RESPAWN:
                 // Update maze (which includes door animation)
@@ -527,7 +534,9 @@ class Game {
                 });
                 
                 // Check for collisions
-                this.handleCollisions();
+                if (this.gameState === Game.STATES.PLAYING) {
+                    this.handleCollisions();
+                }
                 
                 // Draw all serpents
                 this.playerSerpent.draw(this.ctx);

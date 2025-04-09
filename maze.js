@@ -10,7 +10,8 @@ const MAZE_CONFIG = {
     offsetX: 50, // Left margin
     offsetY: 50,  // Top margin
     debug: true, // Enable to show grid lines
-    debugLogging: false // Enable to show debug logging
+    debugLogging: true, // Enable to show debug logging
+    serpentDebugLogging: false, // Enable to show debug logging for serpents
 };
 
 const COLORS = {

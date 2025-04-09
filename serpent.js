@@ -1,5 +1,6 @@
 class Serpent {
-    constructor(gridIndexX, gridIndexY, initialLength, color, speed, segmentSize = 8, maze) {
+    constructor(name, gridIndexX, gridIndexY, initialLength, color, speed, segmentSize = 8, maze) {
+        this.name = name;
         this.segments = [];
         this.speed = speed;
         this.color = color;
@@ -15,7 +16,7 @@ class Serpent {
         // Death animation properties
         this.isDying = false;
         this.deathProgress = 0; // 0 to 1
-        this.deathSpeed = 0.02; // How fast the death animation progresses
+        this.deathSpeed = 0.015; // How fast the death animation progresses
         this.deathStartTime = 0;
         
         // Each segment needs its own direction and turning points queue
@@ -110,20 +111,20 @@ class Serpent {
                     this.direction = { ...this.nextDirection };
                     this.segmentDirections[0] = { ...this.direction };
                     
-                    if (MAZE_CONFIG.debugLogging) {
-                        console.log(`Head turning at: (${head.x}, ${head.y}), Grid center: (${gridX}, ${gridY}), Distance to grid center: ${distanceToGridCenterPoint}, Direction: (${this.direction.x}, ${this.direction.y}), Next direction: (${this.nextDirection.x}, ${this.nextDirection.y})`);
+                    if (MAZE_CONFIG.serpentDebugLogging) {
+                        console.log(`${this.name} turning at: (${head.x}, ${head.y}), Grid center: (${gridX}, ${gridY}), Distance to grid center: ${distanceToGridCenterPoint}, Direction: (${this.direction.x}, ${this.direction.y}), Next direction: (${this.nextDirection.x}, ${this.nextDirection.y})`);
                     }
                 } else {
                     // put back the original new position without the turn
                     nextHeadX = head.x + this.direction.x * this.speed;
                     nextHeadY = head.y + this.direction.y * this.speed;
-                    if (MAZE_CONFIG.debugLogging) {
-                        console.log(`Head would collide with a wall, skipping turn. Head: (${head.x}, ${head.y}), Grid center: (${gridX}, ${gridY}), Distance to grid center: ${distanceToGridCenterPoint}, Direction: (${this.direction.x}, ${this.direction.y}), Next direction: (${this.nextDirection.x}, ${this.nextDirection.y})`);
+                    if (MAZE_CONFIG.serpentDebugLogging) {
+                        console.log(`${this.name} would collide with a wall, skipping turn. Head: (${head.x}, ${head.y}), Grid center: (${gridX}, ${gridY}), Distance to grid center: ${distanceToGridCenterPoint}, Direction: (${this.direction.x}, ${this.direction.y}), Next direction: (${this.nextDirection.x}, ${this.nextDirection.y})`);
                     }
                 }
             } else {
-                if (MAZE_CONFIG.debugLogging) {
-                    console.log(`Head is not close enough to grid center point, skipping turn. Head: (${head.x}, ${head.y}), Grid center: (${gridX}, ${gridY}), Distance: ${distanceToGridCenterPoint}`);
+                if (MAZE_CONFIG.serpentDebugLogging) {
+                    console.log(`${this.name} is not close enough to grid center point, skipping turn. Head: (${head.x}, ${head.y}), Grid center: (${gridX}, ${gridY}), Distance: ${distanceToGridCenterPoint}`);
                 }
             }
         }
@@ -152,8 +153,8 @@ class Serpent {
                 
                 if (distanceToPoint < this.speed) {
                     // Log head and first segment positions
-                    if (MAZE_CONFIG.debugLogging) {
-                        console.log(`Segment ${i} turning at (${point.x}, ${point.y}), Head position: (${head.x}, ${head.y}), segment: (${segment.x}, ${segment.y}), Distance: ${this.distanceBetween(head, segment)}`);
+                    if (MAZE_CONFIG.serpentDebugLogging) {
+                        console.log(`${this.name}: Segment ${i} turning at (${point.x}, ${point.y}), Head position: (${head.x}, ${head.y}), segment: (${segment.x}, ${segment.y}), Distance: ${this.distanceBetween(head, segment)}`);
                     }
 
                     // Segment is close enough to turning point, update its location and direction
@@ -176,11 +177,11 @@ class Serpent {
             }
         }
 
-        if (MAZE_CONFIG.debugLogging) {
+        if (MAZE_CONFIG.serpentDebugLogging) {
             if (this.segments.length > 1) {
-                console.log(`  Head position: (${head.x}, ${head.y}), First segment position: (${this.segments[1].x}, ${this.segments[1].y}), Distance: ${this.distanceBetween(head, this.segments[1])}`);
+                console.log(`  ${this.name}: Head position: (${head.x}, ${head.y}), First segment position: (${this.segments[1].x}, ${this.segments[1].y}), Distance: ${this.distanceBetween(head, this.segments[1])}`);
             } else {
-                console.log(`  Head position: (${head.x}, ${head.y}), No segments`);
+                console.log(`  ${this.name}: Head position: (${head.x}, ${head.y}), No segments`);
             }
         }
     }
@@ -231,65 +232,32 @@ class Serpent {
 
     // Draw the serpent
     draw(ctx) {
-        // Normal drawing
-        this.segments.forEach((segment, index) => {
-            // Draw head with eyes
-            if (index === 0) {
-                ctx.fillStyle = this.color;
-                ctx.beginPath();
-                ctx.arc(
-                    segment.x,
-                    segment.y,
-                    this.segmentSize / 2,
-                    0,
-                    Math.PI * 2
-                );
-                ctx.fill();
+        if (this.isDying) {
+            // Draw dying animation - head shrinks to a point
+            const head = this.segments[0];
+            const headSize = this.segmentSize / 2 * (1 - this.deathProgress);
+            
+            // Draw the shrinking head
+            ctx.fillStyle = this.color;
+            ctx.beginPath();
+            // Draw body segment
+            ctx.fillStyle = this.color;
+            ctx.beginPath();
+            ctx.arc(
+                head.x,
+                head.y,
+                headSize,
+                0,
+                Math.PI * 2
+            );
+            ctx.fill();
+
+            // Draw the rest of the body with fading opacity
+            for (let i = 1; i < this.segments.length; i++) {
+                const segment = this.segments[i];
+                const opacity = Math.max(0, 1 - this.deathProgress * 2); // Body fades out faster than head
                 
-                // Draw eyes
-                ctx.fillStyle = 'white';
-                const eyeSize = this.segmentSize / 6;
-                const eyeOffset = this.segmentSize / 4;
-                
-                // Position eyes based on direction
-                let leftEyeX, leftEyeY, rightEyeX, rightEyeY;
-                
-                if (this.direction.x > 0) { // Moving right
-                    leftEyeX = segment.x + this.segmentSize / 2 - eyeOffset;
-                    leftEyeY = segment.y - eyeOffset;
-                    rightEyeX = segment.x + this.segmentSize / 2 - eyeOffset;
-                    rightEyeY = segment.y + eyeOffset;
-                } else if (this.direction.x < 0) { // Moving left
-                    leftEyeX = segment.x - this.segmentSize / 2 + eyeOffset;
-                    leftEyeY = segment.y - eyeOffset;
-                    rightEyeX = segment.x - this.segmentSize / 2 + eyeOffset;
-                    rightEyeY = segment.y + eyeOffset;
-                } else if (this.direction.y > 0) { // Moving down
-                    leftEyeX = segment.x - eyeOffset;
-                    leftEyeY = segment.y + this.segmentSize / 2 - eyeOffset;
-                    rightEyeX = segment.x + eyeOffset;
-                    rightEyeY = segment.y + this.segmentSize / 2 - eyeOffset;
-                } else { // Moving up or stationary
-                    leftEyeX = segment.x - eyeOffset;
-                    leftEyeY = segment.y - this.segmentSize / 2 + eyeOffset;
-                    rightEyeX = segment.x + eyeOffset;
-                    rightEyeY = segment.y - this.segmentSize / 2 + eyeOffset;
-                }
-                
-                ctx.beginPath();
-                ctx.arc(leftEyeX, leftEyeY, eyeSize, 0, Math.PI * 2);
-                ctx.arc(rightEyeX, rightEyeY, eyeSize, 0, Math.PI * 2);
-                ctx.fill();
-                
-                // Draw pupils
-                ctx.fillStyle = 'black';
-                ctx.beginPath();
-                ctx.arc(leftEyeX, leftEyeY, eyeSize / 2, 0, Math.PI * 2);
-                ctx.arc(rightEyeX, rightEyeY, eyeSize / 2, 0, Math.PI * 2);
-                ctx.fill();
-            } else {
-                // Draw body segment
-                ctx.fillStyle = this.color;
+                ctx.fillStyle = `rgba(${this.getRGBValues()}, ${opacity})`;
                 ctx.beginPath();
                 ctx.arc(
                     segment.x,
@@ -300,7 +268,78 @@ class Serpent {
                 );
                 ctx.fill();
             }
-        });
+        } else {
+            // Normal drawing
+            this.segments.forEach((segment, index) => {
+                // Draw head with eyes
+                if (index === 0) {
+                    ctx.fillStyle = this.color;
+                    ctx.beginPath();
+                    ctx.arc(
+                        segment.x,
+                        segment.y,
+                        this.segmentSize / 2,
+                        0,
+                        Math.PI * 2
+                    );
+                    ctx.fill();
+                    
+                    // Draw eyes
+                    ctx.fillStyle = 'white';
+                    const eyeSize = this.segmentSize / 6;
+                    const eyeOffset = this.segmentSize / 4;
+                    
+                    // Position eyes based on direction
+                    let leftEyeX, leftEyeY, rightEyeX, rightEyeY;
+                    
+                    if (this.direction.x > 0) { // Moving right
+                        leftEyeX = segment.x + this.segmentSize / 2 - eyeOffset;
+                        leftEyeY = segment.y - eyeOffset;
+                        rightEyeX = segment.x + this.segmentSize / 2 - eyeOffset;
+                        rightEyeY = segment.y + eyeOffset;
+                    } else if (this.direction.x < 0) { // Moving left
+                        leftEyeX = segment.x - this.segmentSize / 2 + eyeOffset;
+                        leftEyeY = segment.y - eyeOffset;
+                        rightEyeX = segment.x - this.segmentSize / 2 + eyeOffset;
+                        rightEyeY = segment.y + eyeOffset;
+                    } else if (this.direction.y > 0) { // Moving down
+                        leftEyeX = segment.x - eyeOffset;
+                        leftEyeY = segment.y + this.segmentSize / 2 - eyeOffset;
+                        rightEyeX = segment.x + eyeOffset;
+                        rightEyeY = segment.y + this.segmentSize / 2 - eyeOffset;
+                    } else { // Moving up or stationary
+                        leftEyeX = segment.x - eyeOffset;
+                        leftEyeY = segment.y - this.segmentSize / 2 + eyeOffset;
+                        rightEyeX = segment.x + eyeOffset;
+                        rightEyeY = segment.y - this.segmentSize / 2 + eyeOffset;
+                    }
+                    
+                    ctx.beginPath();
+                    ctx.arc(leftEyeX, leftEyeY, eyeSize, 0, Math.PI * 2);
+                    ctx.arc(rightEyeX, rightEyeY, eyeSize, 0, Math.PI * 2);
+                    ctx.fill();
+                    
+                    // Draw pupils
+                    ctx.fillStyle = 'black';
+                    ctx.beginPath();
+                    ctx.arc(leftEyeX, leftEyeY, eyeSize / 2, 0, Math.PI * 2);
+                    ctx.arc(rightEyeX, rightEyeY, eyeSize / 2, 0, Math.PI * 2);
+                    ctx.fill();
+                } else {
+                    // Draw body segment
+                    ctx.fillStyle = this.color;
+                    ctx.beginPath();
+                    ctx.arc(
+                        segment.x,
+                        segment.y,
+                        this.segmentSize / 2,
+                        0,
+                        Math.PI * 2
+                    );
+                    ctx.fill();
+                }
+            });
+        }
     }
 
     // Check collision with another serpent

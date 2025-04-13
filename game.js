@@ -573,12 +573,12 @@ class Game {
         // Draw remaining lives as small serpents in the bottom right
         const startX = MAZE_CONFIG.offsetX + MAZE_CONFIG.gridWidth * MAZE_CONFIG.gridSize;
         const startY = MAZE_CONFIG.offsetY + MAZE_CONFIG.offsetY/2 + MAZE_CONFIG.gridHeight * MAZE_CONFIG.gridSize;
-        const spacing = MAZE_CONFIG.segmentSize * 2;
+        const spacing = MAZE_CONFIG.segmentSize;
 
         for (let i = 0; i < this.lives - 1; i++) { // -1 because current serpent counts as a life
             this.ctx.fillStyle = COLORS.LIVES;
             this.ctx.beginPath();
-            this.ctx.arc(startX - (i * spacing), startY, MAZE_CONFIG.segmentSize / 2, 0, Math.PI * 2);
+            this.ctx.arc(startX - (i * spacing), startY, MAZE_CONFIG.segmentSize / 4, 0, Math.PI * 2);
             this.ctx.fill();
         }
     }

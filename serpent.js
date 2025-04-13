@@ -313,7 +313,7 @@ class Serpent {
                         rightEyeX = segment.x + eyeOffset;
                         rightEyeY = segment.y - this.segmentSize / 2 + eyeOffset;
                     }
-                    
+    
                     ctx.beginPath();
                     ctx.arc(leftEyeX, leftEyeY, eyeSize, 0, Math.PI * 2);
                     ctx.arc(rightEyeX, rightEyeY, eyeSize, 0, Math.PI * 2);
@@ -337,6 +337,28 @@ class Serpent {
                         Math.PI * 2
                     );
                     ctx.fill();
+
+                    // Draw body segment front
+                    let startAngle, endAngle;
+                    if (this.segmentDirections[index].x > 0) { // Moving right
+                        startAngle = 7*Math.PI/4;
+                        endAngle = Math.PI/4;
+                    } else if (this.segmentDirections[index].x < 0) { // Moving left
+                        startAngle = 3*Math.PI/4;
+                        endAngle = 5*Math.PI/4;
+                    } else if (this.segmentDirections[index].y > 0) { // Moving down
+                        startAngle = Math.PI/4;
+                        endAngle = 3*Math.PI/4;
+                    } else if (this.segmentDirections[index].y < 0) { // Moving up
+                        startAngle = 5*Math.PI/4;
+                        endAngle = 7*Math.PI/4;
+                    }
+
+                    ctx.strokeStyle = 'white';
+                    ctx.lineWidth = 4;
+                    ctx.beginPath();
+                    ctx.arc(segment.x, segment.y, this.segmentSize / 2 - 2, startAngle, endAngle);
+                    ctx.stroke();
                 }
             });
         }

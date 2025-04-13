@@ -49,28 +49,19 @@ class Game {
         this.createNewPlayerSerpent();
         
         // Initialize enemy serpents
-        this.enemySerpents = [
+        const NUM_ENEMIES = 2;
+        this.enemySerpents = Array.from({length: NUM_ENEMIES}, (_, i) => 
             new Serpent(
-                'Enemy 1',
+                `Enemy ${i + 1}`,
                 LEVEL_ENEMY_START[this.level].x,
-                LEVEL_ENEMY_START[this.level].y,
+                LEVEL_ENEMY_START[this.level].y, 
                 this.enemyLength,
                 (this.enemyLength < this.playerLength) ? COLORS.ENEMY_VULNERABLE : COLORS.ENEMY,
                 this.enemySpeed,
                 MAZE_CONFIG.segmentSize,
                 this.maze
             )
-            // new Serpent(
-            //     'Enemy 2',
-            //     LEVEL_ENEMY_START[this.level].x,
-            //     LEVEL_ENEMY_START[this.level].y,
-            //     this.enemyLength,
-            //     (this.enemyLength < this.playerLength) ? COLORS.ENEMY_VULNERABLE : COLORS.ENEMY,
-            //     this.enemySpeed,
-            //     MAZE_CONFIG.segmentSize,
-            //     this.maze
-            // )
-        ];
+        );
         
         this.setupControls();
         this.startGame();

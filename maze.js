@@ -10,7 +10,7 @@ const MAZE_CONFIG = {
     gridHeight: 11, // Number of grid squares vertically 
     offsetX: 50, // Left margin
     offsetY: 50,  // Top margin
-    debug: true, // Enable to show grid lines
+    debug: false, // Enable to show grid lines
     debugLogging: true, // Enable to show debug logging
     serpentDebugLogging: false, // Enable to show debug logging for serpents
 };

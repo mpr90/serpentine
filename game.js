@@ -26,8 +26,6 @@ class Game {
         this.lives = 3;
         this.gameOver = false;
         this.lastTime = 0;
-        this.playerSpeed = 4;
-        this.enemySpeed = 3;
         this.paused = false;
         
         // Game state management
@@ -41,13 +39,33 @@ class Game {
         // Initialize maze
         this.maze = new Maze();
         this.maze.setupLevel(this.level);
-        
+             
+        this.setupControls();
+    }
+
+    /**
+     * Start the game
+     */
+    startGame() {
+        // Reset game state
+        this.gameState = Game.STATES.INITIAL;
+        this.stateStartTime = performance.now();
+        this.score = 0;
+        this.level = 1;
+        this.lives = 3;
+        this.lastTime = 0;
+        this.paused = false;
         this.playerLength = 3;
         this.enemyLength = 5;
-
-        // Initialize serpents
+        this.playerSpeed = 4;
+        this.enemySpeed = 3;
+        this.gameOver = false;
+        this.releasedSerpents = 0;
+        
+        // Reset serpents
         this.createNewPlayerSerpent();
         
+        // Reset enemy serpents
         // Initialize enemy serpents
         const NUM_ENEMIES = 2;
         this.enemySerpents = Array.from({length: NUM_ENEMIES}, (_, i) => 
@@ -62,25 +80,15 @@ class Game {
                 this.maze
             )
         );
-        
-        this.setupControls();
-        this.startGame();
-    }
 
-    startGame() {
-        this.gameState = Game.STATES.INITIAL;
-        this.stateStartTime = performance.now();
-        this.releasedSerpents = 0;
-        
-        // Stop all serpents initially
-        this.playerSerpent.stop();
-        this.enemySerpents.forEach(serpent => serpent.stop());
-        
-        // Start the game loop
+        // Start game loop
+        this.lastTime = performance.now();
         requestAnimationFrame(this.gameLoop.bind(this));
+        
+        console.log("Game started");
     }
 
-    updateGameState(timestamp) {
+     updateGameState(timestamp) {
         const stateElapsed = timestamp - this.stateStartTime;
         
         switch (this.gameState) {
@@ -310,6 +318,15 @@ class Game {
                     // Player hit enemy's body - shorten the enemy
                     enemy.shrink(enemy.segments.length - collision.segment);
                     this.score += 50;
+                    
+                    // Play chirp sound when player eats enemy segments
+                    if (window.soundManager) {
+                        window.soundManager.playChirpSound({
+                            frequency: 440 + (collision.segment * 10), // Higher pitch for segments closer to head
+                            duration: 0.1,
+                            volume: 0.7
+                        });
+                    }
                     
                     // If enemy is shorter than player, turn it green
                     if (enemy.getLength() < this.playerSerpent.getLength()) {
@@ -591,9 +608,4 @@ class Game {
         this.ctx.font = '20px Arial';
         this.ctx.fillText(`Final Score: ${this.score}`, this.canvas.width / 2, this.canvas.height / 2 + 40);
     }
-}
-
-// Initialize the game when the page loads
-window.addEventListener('load', () => {
-    const game = new Game();
-}); 
+} 

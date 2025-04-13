@@ -26,8 +26,8 @@ class Game {
         this.lives = 3;
         this.gameOver = false;
         this.lastTime = 0;
-        this.playerSpeed = 3;
-        this.enemySpeed = 2;
+        this.playerSpeed = 4;
+        this.enemySpeed = 3;
         this.paused = false;
         
         // Game state management
@@ -483,6 +483,13 @@ class Game {
     gameLoop(timestamp) {
         // Calculate delta time
         const deltaTime = timestamp - this.lastTime;
+        
+        // Limit to 60 FPS (approximately 16.67ms per frame)
+        if (deltaTime < 16.67) {
+            requestAnimationFrame(this.gameLoop.bind(this));
+            return;
+        }
+        
         this.lastTime = timestamp;
 
         // Update game state
@@ -524,7 +531,7 @@ class Game {
                     serpent.update();
                 });
                 
-                // Check for collisions
+                // Check for collisions only during PLAYING state
                 if (this.gameState === Game.STATES.PLAYING) {
                     this.handleCollisions();
                 }

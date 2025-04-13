@@ -2,6 +2,7 @@ const MAZE_CONFIG = {
 
     backgroundColor: '#000000',
     wallThickness: 10,
+    wallCapThickness: 4,
     doorThickness: 6,
     segmentSize: 25, // Base size for serpent segments
     gridSize: 50, // Size of each grid square in pixels
@@ -15,14 +16,16 @@ const MAZE_CONFIG = {
 };
 
 const COLORS = {
-    WALL: '#5581B8',
+    WALL: '#CF54F6',
+    WALLCAP: '#CCCCCC',
+    DOOR: '#CF54F6',
     BACKGROUND: '#000000',
     GRID_LINE: '#333333',
     TEXT: '#FFFFFF',
-    PLAYER: '#5581B8',
-    ENEMY: '#CA818B',
-    ENEMY_VULNERABLE: '#5AAE56',
-    LIVES: '#5581B8',
+    PLAYER: '#0191E5',
+    ENEMY: '#EE6B01',
+    ENEMY_VULNERABLE: '#2EA004',
+    LIVES: '#0191E5',
     GAME_OVER: '#FF0000'
 };
 
@@ -329,11 +332,6 @@ class Maze {
         }
 
         // Draw walls
-        ctx.strokeStyle = COLORS.WALL;
-        ctx.lineWidth = MAZE_CONFIG.wallThickness;
-        ctx.lineCap = 'round';
-        ctx.lineJoin = 'round';
-
         for (let y = 0; y < MAZE_CONFIG.gridHeight; y++) {
             for (let x = 0; x < MAZE_CONFIG.gridWidth; x++) {
                 const wallType = this.walls[y][x];
@@ -365,8 +363,31 @@ class Maze {
         ctx.lineWidth = MAZE_CONFIG.doorThickness;
         this.drawDoors(ctx);
     }
+
+    setWallStyle(ctx) {
+        ctx.strokeStyle = COLORS.WALL;
+        ctx.lineWidth = MAZE_CONFIG.wallThickness;
+        ctx.lineCap = 'butt';
+        ctx.lineJoin = 'round';
+    }
+
+    setWallCapStyle(ctx) {
+        ctx.strokeStyle = COLORS.WALLCAP;
+        ctx.lineWidth = MAZE_CONFIG.wallCapThickness;
+        ctx.lineCap = 'butt';
+        ctx.lineJoin = 'round';
+    }
     
+    setDoorStyle(ctx) {
+        ctx.strokeStyle = COLORS.DOOR;
+        ctx.lineWidth = MAZE_CONFIG.doorThickness;
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+    }
+
     drawDoors(ctx) {
+        this.setDoorStyle(ctx);
+
         // Draw enemy door
         let doorWidth = MAZE_CONFIG.gridSize * this.enemyDoorOpenProgress;
         
@@ -393,30 +414,90 @@ class Maze {
     }
 
     drawTopWall(ctx, x, y) {
+        this.setWallStyle(ctx);
         ctx.beginPath();
         ctx.moveTo(x, y);
         ctx.lineTo(x + MAZE_CONFIG.gridSize, y);
         ctx.stroke();
+
+        // Draw wall cap on left end of wall
+        this.setWallCapStyle(ctx);
+        ctx.beginPath();
+        ctx.moveTo(x, y - MAZE_CONFIG.wallThickness/2);
+        ctx.lineTo(x, y + MAZE_CONFIG.wallThickness/2);
+        ctx.stroke();
+
+        // Draw wall cap on right end of wall
+        this.setWallCapStyle(ctx);
+        ctx.beginPath();
+        ctx.moveTo(x + MAZE_CONFIG.gridSize, y - MAZE_CONFIG.wallThickness/2);
+        ctx.lineTo(x + MAZE_CONFIG.gridSize, y + MAZE_CONFIG.wallThickness/2);
+        ctx.stroke();
     }
 
     drawRightWall(ctx, x, y) {
+        this.setWallStyle(ctx);
         ctx.beginPath();
         ctx.moveTo(x + MAZE_CONFIG.gridSize, y);
         ctx.lineTo(x + MAZE_CONFIG.gridSize, y + MAZE_CONFIG.gridSize);
         ctx.stroke();
+
+        // Draw wall cap on top end of wall
+        this.setWallCapStyle(ctx);
+        ctx.beginPath();
+        ctx.moveTo(x + MAZE_CONFIG.gridSize - MAZE_CONFIG.wallThickness/2, y);
+        ctx.lineTo(x + MAZE_CONFIG.gridSize + MAZE_CONFIG.wallThickness/2, y);
+        ctx.stroke();
+
+        // Draw wall cap on bottom end of wall
+        this.setWallCapStyle(ctx);
+        ctx.beginPath();
+        ctx.moveTo(x + MAZE_CONFIG.gridSize - MAZE_CONFIG.wallThickness/2, y + MAZE_CONFIG.gridSize);
+        ctx.lineTo(x + MAZE_CONFIG.gridSize + MAZE_CONFIG.wallThickness/2, y + MAZE_CONFIG.gridSize);
+        ctx.stroke();
     }
 
     drawBottomWall(ctx, x, y) {
+        this.setWallStyle(ctx);
         ctx.beginPath();
         ctx.moveTo(x, y + MAZE_CONFIG.gridSize);
         ctx.lineTo(x + MAZE_CONFIG.gridSize, y + MAZE_CONFIG.gridSize);
         ctx.stroke();
+
+        // Draw wall cap on left end of wall
+        this.setWallCapStyle(ctx);
+        ctx.beginPath();
+        ctx.moveTo(x, y + MAZE_CONFIG.gridSize - MAZE_CONFIG.wallThickness/2);
+        ctx.lineTo(x, y + MAZE_CONFIG.gridSize + MAZE_CONFIG.wallThickness/2);
+        ctx.stroke();
+
+        // Draw wall cap on right end of wall
+        this.setWallCapStyle(ctx);
+        ctx.beginPath();
+        ctx.moveTo(x + MAZE_CONFIG.gridSize, y + MAZE_CONFIG.gridSize - MAZE_CONFIG.wallThickness/2);
+        ctx.lineTo(x + MAZE_CONFIG.gridSize, y + MAZE_CONFIG.gridSize + MAZE_CONFIG.wallThickness/2);
+        ctx.stroke();
     }
 
     drawLeftWall(ctx, x, y) {
+        this.setWallStyle(ctx);
         ctx.beginPath();
         ctx.moveTo(x, y);
         ctx.lineTo(x, y + MAZE_CONFIG.gridSize);
+        ctx.stroke();
+
+        // Draw wall cap on top end of wall
+        this.setWallCapStyle(ctx);
+        ctx.beginPath();
+        ctx.moveTo(x - MAZE_CONFIG.wallThickness/2, y);
+        ctx.lineTo(x + MAZE_CONFIG.wallThickness/2, y); 
+        ctx.stroke();
+
+        // Draw wall cap on bottom end of wall
+        this.setWallCapStyle(ctx);
+        ctx.beginPath();
+        ctx.moveTo(x - MAZE_CONFIG.wallThickness/2, y + MAZE_CONFIG.gridSize);
+        ctx.lineTo(x + MAZE_CONFIG.wallThickness/2, y + MAZE_CONFIG.gridSize);
         ctx.stroke();
     }
 

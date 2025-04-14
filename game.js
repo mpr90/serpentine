@@ -311,6 +311,8 @@ class Game {
                         this.playerSerpent.grow();
                         this.score += 100;
                         i--; // Adjust index after removal
+
+                        this.enemySerpentDeathSound();
                     } else {
                         // Player loses a life
                         this.handlePlayerDeath();
@@ -320,25 +322,21 @@ class Game {
                     enemy.shrink(enemy.getLength() - collision.segment);
                     this.score += 50;
                     
-                    // Play chirp sound when player eats enemy segments
-                    if (window.soundManager) {
-                        window.soundManager.playChirpSound({
-                            frequency: 440 + (collision.segment * 10), // Higher pitch for segments closer to head
-                            duration: 0.1,
-                            volume: 0.7
-                        });
-                    }
-                    
-                    // If enemy serpent only has one segment, it dies and player wins
+                    // If enemy serpent only has one segment, it dies
                     if (enemy.getLength() === 1) {
                         this.enemySerpents.splice(i, 1);
                         this.playerSerpent.grow();
                         this.score += 100;
                         i--; // Adjust index after removal
-                    }
-                    // If enemy is shorter than player, turn it green
-                    else if (enemy.getLength() < this.playerSerpent.getLength()) {
-                        enemy.color = COLORS.ENEMY_VULNERABLE;
+
+                        this.enemySerpentDeathSound();
+                    } else {
+                        // If enemy is shorter than player, turn it green
+                        if (enemy.getLength() < this.playerSerpent.getLength()) {
+                            enemy.color = COLORS.ENEMY_VULNERABLE;
+                        }
+
+                        this.enemySerpentSegmentEatenSound(collision.segment);
                     }
                 }
                 return; // Exit after handling first collision
@@ -353,7 +351,10 @@ class Game {
                 // If player's serpent only has one segment, then player dies
                 if (this.playerSerpent.getLength() === 1) {
                     this.handlePlayerDeath();
+                } else {
+                    this.playerSegmentEatenSound(this.playerSerpent.getLength());
                 }
+
                 // Check if any enemies should turn green based on new player length
                 for (let j = 0; j < this.enemySerpents.length; j++) {
                     if (this.enemySerpents[j].getLength() >= this.playerSerpent.getLength()) {
@@ -365,12 +366,54 @@ class Game {
         }
     }
 
+    enemySerpentSegmentEatenSound(segment) {
+        if (window.soundManager) {
+            window.soundManager.playChirpSound({
+                frequency: 440 + (segment * 10), // Higher pitch for segments closer to head
+                duration: 0.1,
+                volume: 0.7,
+                ascending: true
+            });
+        }
+    }
+
+    enemySerpentDeathSound() {
+        if (window.soundManager) {
+            window.soundManager.playChirpSound({
+                frequency: 340,
+                duration: 0.2,
+                volume: 0.7,
+                ascending: true
+            });
+        }
+    }
+
+    playerSegmentEatenSound(segment) {
+        if (window.soundManager) {
+            window.soundManager.playChirpSound({
+                frequency: 440 + (segment * 10), // Higher pitch for segments closer to head
+                duration: 0.1,
+                volume: 0.7,
+                ascending: false
+            });
+        }
+    }
+
+    playerDeathSound() {
+        if (window.soundManager) {
+            window.soundManager.playDeathSound();
+        }
+    }
+
     handlePlayerDeath() {
         // Decrement lives
         this.lives--;
                 
         // Start death animation for player serpent
         this.playerSerpent.startDeathAnimation();
+        
+        // Play death sound
+        this.playerDeathSound();
         
         // Transition to player respawn state
         // First transition to a wait state to give player time to orient

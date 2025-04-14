@@ -142,6 +142,7 @@ class SoundManager {
      * @param {number} options.frequency - Starting frequency in Hz
      * @param {number} options.duration - Duration in seconds
      * @param {number} options.volume - Volume level (0.0 to 1.0)
+     * @param {boolean} options.ascending - Whether the chirp should ascend in frequency (true) or descend (false)
      */
     playChirpSound(options = {}) {
         if (this.isMuted || !this.audioContext) {
@@ -151,7 +152,8 @@ class SoundManager {
         // Default options
         const frequency = options.frequency || 440; // A4 note
         const duration = options.duration || 0.1; // 100ms
-        const volume = this.volume * (options.volume || 1.0);
+        const volume = this.volume * (options.volume || 0.7);
+        const ascending = options.ascending !== undefined ? options.ascending : true; // Default to ascending
         
         // Create oscillator for the sound
         const oscillator = this.audioContext.createOscillator();
@@ -162,10 +164,19 @@ class SoundManager {
         // Set up oscillator
         oscillator.type = 'square'; // Square wave for 8-bit sound
         oscillator.frequency.setValueAtTime(frequency, this.audioContext.currentTime);
-        oscillator.frequency.linearRampToValueAtTime(
-            frequency * 1.5, // Rise to 1.5x frequency
-            this.audioContext.currentTime + duration
-        );
+        
+        // Set the frequency ramp based on ascending parameter
+        if (ascending) {
+            oscillator.frequency.linearRampToValueAtTime(
+                frequency * 1.5, // Rise to 1.5x frequency
+                this.audioContext.currentTime + duration
+            );
+        } else {
+            oscillator.frequency.linearRampToValueAtTime(
+                frequency * 0.5, // Fall to 0.5x frequency
+                this.audioContext.currentTime + duration
+            );
+        }
         
         // Set up gain envelope
         gainNode.gain.setValueAtTime(0, this.audioContext.currentTime);
@@ -185,6 +196,81 @@ class SoundManager {
             oscillator.disconnect();
             gainNode.disconnect();
         };
+    }
+    
+    /**
+     * Play a death sound - a short 8-bit musical riff with a sad, death-like quality
+     * @param {Object} options - Optional parameters for the sound
+     * @param {number} options.volume - Volume level (0.0 to 1.0)
+     */
+    playDeathSound(options = {}) {
+        if (this.isMuted || !this.audioContext) {
+            return;
+        }
+        
+        // Default options
+        const volume = this.volume * (options.volume || 0.7);
+        
+        // Create master gain node for overall volume control
+        const masterGain = this.audioContext.createGain();
+        masterGain.gain.value = volume;
+        masterGain.connect(this.audioContext.destination);
+        
+        // Define the notes for the death sound (in Hz)
+        // Using a minor scale for a sad, death-like quality
+        // Modified to be more ominous with a descending pattern
+        const notes = [
+            392.00, // G4
+            349.23, // F4
+            329.63, // E4
+            293.66, // D4
+            261.63, // C4
+            246.94, // B3
+            261.63, // C4
+            0       // Silence
+        ];
+        
+        // Duration for each note (in seconds)
+        const noteDuration = 0.15;
+        
+        // Play each note in sequence
+        notes.forEach((frequency, index) => {
+            if (frequency === 0) return; // Skip silence
+            
+            // Create oscillator for this note
+            const oscillator = this.audioContext.createOscillator();
+            
+            // Create gain node for this note
+            const gainNode = this.audioContext.createGain();
+            
+            // Set up oscillator
+            oscillator.type = 'square'; // Square wave for 8-bit sound
+            oscillator.frequency.value = frequency;
+            
+            // Set up gain envelope for this note
+            gainNode.gain.setValueAtTime(0, this.audioContext.currentTime + index * noteDuration);
+            gainNode.gain.linearRampToValueAtTime(1, this.audioContext.currentTime + index * noteDuration + 0.01);
+            gainNode.gain.linearRampToValueAtTime(0, this.audioContext.currentTime + (index + 1) * noteDuration);
+            
+            // Connect nodes
+            oscillator.connect(gainNode);
+            gainNode.connect(masterGain);
+            
+            // Play the note
+            oscillator.start(this.audioContext.currentTime + index * noteDuration);
+            oscillator.stop(this.audioContext.currentTime + (index + 1) * noteDuration);
+            
+            // Clean up when done
+            oscillator.onended = () => {
+                oscillator.disconnect();
+                gainNode.disconnect();
+            };
+        });
+        
+        // Clean up master gain after all notes are played
+        setTimeout(() => {
+            masterGain.disconnect();
+        }, notes.length * noteDuration * 1000);
     }
     
     /**

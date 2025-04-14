@@ -301,6 +301,7 @@ class Game {
             const enemy = this.enemySerpents[i];
             const collision = this.playerSerpent.checkCollision(enemy);
             
+            // Check player-to-enemy collisions
             if (collision) {
                 if (collision.type === 'head') {
                     // Head-on collision
@@ -316,7 +317,7 @@ class Game {
                     }
                 } else if (collision.type === 'body') {
                     // Player hit enemy's body - shorten the enemy
-                    enemy.shrink(enemy.segments.length - collision.segment);
+                    enemy.shrink(enemy.getLength() - collision.segment);
                     this.score += 50;
                     
                     // Play chirp sound when player eats enemy segments
@@ -328,8 +329,15 @@ class Game {
                         });
                     }
                     
+                    // If enemy serpent only has one segment, it dies and player wins
+                    if (enemy.getLength() === 1) {
+                        this.enemySerpents.splice(i, 1);
+                        this.playerSerpent.grow();
+                        this.score += 100;
+                        i--; // Adjust index after removal
+                    }
                     // If enemy is shorter than player, turn it green
-                    if (enemy.getLength() < this.playerSerpent.getLength()) {
+                    else if (enemy.getLength() < this.playerSerpent.getLength()) {
                         enemy.color = COLORS.ENEMY_VULNERABLE;
                     }
                 }
@@ -340,8 +348,12 @@ class Game {
             const enemyToPlayerCollision = enemy.checkCollision(this.playerSerpent);
             if (enemyToPlayerCollision && enemyToPlayerCollision.type === 'body') {
                 // Enemy hit player's body - shorten the player
-                this.playerSerpent.shrink(this.playerSerpent.segments.length - enemyToPlayerCollision.segment);
+                this.playerSerpent.shrink(this.playerSerpent.getLength() - enemyToPlayerCollision.segment);
                 
+                // If player's serpent only has one segment, then player dies
+                if (this.playerSerpent.getLength() === 1) {
+                    this.handlePlayerDeath();
+                }
                 // Check if any enemies should turn green based on new player length
                 for (let j = 0; j < this.enemySerpents.length; j++) {
                     if (this.enemySerpents[j].getLength() >= this.playerSerpent.getLength()) {

@@ -223,7 +223,7 @@ class Serpent {
 
     // Remove segments from the tail
     shrink(numSegments = 1) {
-        for (let i = 0; i < numSegments && this.segments.length > 2; i++) {
+        for (let i = 0; i < numSegments && this.segments.length > 1; i++) {
             this.segments.pop();
             this.segmentDirections.pop();
             this.segmentTurningPoints.pop();

@@ -370,7 +370,7 @@ class Serpent {
         
         // Check head-to-head collision
         const otherHead = otherSerpent.segments[0];
-        const headCollisionDistance = this.headSize + otherSerpent.headSize;
+        const headCollisionDistance = this.headSize / 2 + otherSerpent.headSize / 2;
         const headCollision = this.distanceBetween(head, otherHead) < headCollisionDistance;
         
         if (headCollision) {
@@ -380,7 +380,7 @@ class Serpent {
         // Check collision with other serpent's body
         for (let i = 1; i < otherSerpent.segments.length; i++) {
             const segment = otherSerpent.segments[i];
-            const collisionDistance = this.headSize + otherSerpent.segmentSize;
+            const collisionDistance = this.headSize / 2 + otherSerpent.segmentSize / 2;
             if (this.distanceBetween(head, segment) < collisionDistance) {
                 return { type: 'body', segment: i };
             }

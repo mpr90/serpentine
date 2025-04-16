@@ -36,6 +36,9 @@ class Game {
         this.releaseStartTime = 0;
         this.releasedSerpents = 0;
         
+        // Background sound control
+        this.backgroundSoundStop = null;
+        
         // Initialize maze
         this.maze = new Maze();
         this.maze.setupLevel(this.level);
@@ -61,6 +64,23 @@ class Game {
         this.enemySpeed = 3;
         this.gameOver = false;
         this.releasedSerpents = 0;
+        
+        // Start background sound
+        if (window.soundManager) {
+            // Stop any existing background sound
+            if (this.backgroundSoundStop) {
+                this.backgroundSoundStop();
+                this.backgroundSoundStop = null;
+            }
+            
+            // Start new background sound
+            this.backgroundSoundStop = window.soundManager.playBackgroundSound({
+                volume: 0.1,
+                burstDuration: 0.3,
+                gapDuration: 0.05,
+                frequency: 80
+            });
+        }
         
         // Reset serpents
         this.createNewPlayerSerpent();
@@ -216,6 +236,13 @@ class Game {
                 if (this.gameOver) {
                     this.gameState = Game.STATES.GAME_OVER;
                     this.stateStartTime = timestamp;
+                    
+                    // Stop background sound when game is over
+                    if (this.backgroundSoundStop) {
+                        this.backgroundSoundStop();
+                        this.backgroundSoundStop = null;
+                    }
+                    
                     if (MAZE_CONFIG.debugLogging) console.log(`Game state transition to GAME_OVER`);
                 }
                 break;
